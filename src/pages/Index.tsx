@@ -1,6 +1,6 @@
-
 import React, { useState } from 'react';
-import { Search, Zap, Globe, Book, Code, Terminal } from 'lucide-react';
+import { Search, Zap, Globe, Book, Code, Terminal, MessageCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import NavBar from '@/components/NavBar';
 import SearchBar from '@/components/SearchBar';
 import FeatureCard from '@/components/FeatureCard';
@@ -46,7 +46,6 @@ const Index: React.FC = () => {
     setSearchQuery(query);
     setShowResults(true);
     
-    // In a real application, we would make an API call here
     console.log("Searching for:", query);
   };
 
@@ -60,7 +59,6 @@ const Index: React.FC = () => {
       <NavBar />
       
       <main className="flex-1">
-        {/* Hero Section */}
         <section className="py-16 md:py-24 px-4">
           <div className="max-w-6xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
@@ -93,10 +91,18 @@ const Index: React.FC = () => {
                 </button>
               ))}
             </div>
+            
+            <div className="mt-8 flex justify-center">
+              <Link to="/chat">
+                <Button className="bg-nodejs-green hover:bg-nodejs-lightGreen flex items-center gap-2">
+                  <MessageCircle className="h-4 w-4" />
+                  Try AI Chat Assistant
+                </Button>
+              </Link>
+            </div>
           </div>
         </section>
         
-        {/* Search Results Section (conditional) */}
         {showResults && (
           <section className="py-12 px-4 bg-muted/50">
             <div className="max-w-6xl mx-auto">
@@ -123,7 +129,6 @@ const Index: React.FC = () => {
           </section>
         )}
         
-        {/* Features Section */}
         <section id="features" className="py-16 px-4 bg-gradient-to-b from-background to-muted/30">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-3xl font-bold mb-2 text-center">Features</h2>
@@ -162,11 +167,15 @@ const Index: React.FC = () => {
                 title="Always Updated"
                 description="Documentation is synced with the latest Node.js releases."
               />
+              <FeatureCard
+                icon={MessageCircle}
+                title="AI Chat Assistant"
+                description="Ask questions about Node.js in natural language and get detailed answers."
+              />
             </div>
           </div>
         </section>
         
-        {/* Code Example Section */}
         <section id="examples" className="py-16 px-4">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-3xl font-bold mb-2 text-center">How It Works</h2>
@@ -219,7 +228,6 @@ See also: fs.promises.readFile(), fs.readFileSync()`}
           </div>
         </section>
         
-        {/* CTA Section */}
         <section className="py-16 px-4 bg-nodejs-darkBlue text-white">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl font-bold mb-6">Ready to supercharge your Node.js development?</h2>
@@ -235,7 +243,6 @@ See also: fs.promises.readFile(), fs.readFileSync()`}
         </section>
       </main>
       
-      {/* Footer */}
       <footer className="py-8 px-4 border-t border-border">
         <div className="max-w-6xl mx-auto text-center">
           <p className="text-sm text-muted-foreground">
