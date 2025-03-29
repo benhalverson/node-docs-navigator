@@ -15,7 +15,7 @@ const Chat: React.FC = () => {
               Chat with <span className="text-nodejs-green">Node.js</span> Documentation
             </h1>
             <p className="text-muted-foreground text-center mb-8 max-w-2xl mx-auto">
-              Ask questions about Node.js API, modules, and features to get instant answers
+              Ask questions about Node.js API, modules, and features or request code examples
             </p>
             
             <NodeJsChat />
@@ -36,8 +36,7 @@ const Chat: React.FC = () => {
         </div>
       </footer>
       
-      <style dangerouslySetInnerHTML={{
-        __html: `
+      <style jsx>{`
         .search-highlight {
           background-color: rgba(104, 211, 145, 0.2);
           padding: 0 2px;
@@ -55,8 +54,7 @@ const Chat: React.FC = () => {
         code {
           font-family: monospace;
         }
-        `
-      }}></style>
+      `}</style>
     </div>
   );
 };

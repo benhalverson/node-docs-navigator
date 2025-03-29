@@ -16,7 +16,7 @@ const NodeJsChat: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Hello! I can help answer your questions about Node.js documentation. What would you like to know?'
+      content: 'Hello! I can help answer your questions about Node.js documentation and provide code examples. What would you like to know or build today?'
     }
   ]);
   const [input, setInput] = useState('');
@@ -79,6 +79,14 @@ const NodeJsChat: React.FC = () => {
     }
   };
 
+  const formatMessageContent = (content: string) => {
+    // Highlight code blocks for better readability
+    return content.replace(
+      /```(js|javascript)?([\s\S]*?)```/g, 
+      (_, lang, code) => `<pre><code>${code}</code></pre>`
+    );
+  };
+
   return (
     <div className="flex flex-col bg-card border rounded-lg shadow-md h-[500px] max-h-[80vh]">
       <div className="p-4 border-b flex justify-between items-center">
@@ -104,11 +112,14 @@ const NodeJsChat: React.FC = () => {
             >
               <div className="flex items-start mb-1 gap-2">
                 {message.role === 'assistant' && (
-                  <Bot className="h-5 w-5 text-nodejs-green mt-1" />
+                  <Bot className="h-5 w-5 text-nodejs-green mt-1 flex-shrink-0" />
                 )}
-                <div className="whitespace-pre-wrap">{message.content}</div>
+                <div 
+                  className="whitespace-pre-wrap"
+                  dangerouslySetInnerHTML={{ __html: formatMessageContent(message.content) }}
+                />
                 {message.role === 'user' && (
-                  <User className="h-5 w-5 text-muted-foreground mt-1" />
+                  <User className="h-5 w-5 text-muted-foreground mt-1 flex-shrink-0" />
                 )}
               </div>
             </div>
@@ -137,7 +148,7 @@ const NodeJsChat: React.FC = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask about Node.js documentation..."
+            placeholder="Ask about Node.js or request a code example..."
             className="min-h-[60px] resize-none"
           />
           <Button 
@@ -147,6 +158,9 @@ const NodeJsChat: React.FC = () => {
           >
             <Send className="h-5 w-5" />
           </Button>
+        </div>
+        <div className="mt-2 text-xs text-muted-foreground">
+          <p>Try: "make a script using fetch API" or "how to create an HTTP server"</p>
         </div>
       </div>
     </div>
