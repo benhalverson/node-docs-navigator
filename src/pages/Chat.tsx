@@ -36,8 +36,8 @@ const Chat: React.FC = () => {
         </div>
       </footer>
       
-      {/* Add global styles for code formatting in chat messages */}
-      <style jsx global>{`
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .search-highlight {
           background-color: rgba(104, 211, 145, 0.2);
           padding: 0 2px;
@@ -55,7 +55,8 @@ const Chat: React.FC = () => {
         code {
           font-family: monospace;
         }
-      `}</style>
+        `
+      }}></style>
     </div>
   );
 };

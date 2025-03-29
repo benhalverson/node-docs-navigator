@@ -19,7 +19,10 @@ const SampleSearchResult: React.FC<SampleSearchResultProps> = ({
   url = "https://nodejs.org/docs/latest/api/"
 }) => {
   const handleReadMore = () => {
-    window.open(url, '_blank');
+    // Open the URL in a new tab
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
   };
 
   return (
