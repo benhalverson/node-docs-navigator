@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Search, Zap, Globe, Book, Code, Terminal, MessageCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import NavBar from '@/components/NavBar';
 import SearchBar from '@/components/SearchBar';
 import FeatureCard from '@/components/FeatureCard';
 import SampleSearchResult from '@/components/SampleSearchResult';
 import TypewriterText from '@/components/TypewriterText';
 import { Button } from '@/components/ui/button';
+import { searchNodeJsDocs, getNodeJsDocContent } from '@/utils/api';
+import { toast } from '@/components/ui/use-toast';
 
 const exampleSearches = [
   "fs.readFile",
@@ -17,41 +19,115 @@ const exampleSearches = [
   "EventEmitter"
 ];
 
-const sampleResults = [
-  {
-    title: "fs.readFile(path[, options], callback)",
-    path: "File System > fs.readFile",
-    excerpt: "Asynchronously reads the entire contents of a file. <span class='search-highlight'>fs.readFile</span> does not guarantee the order of reading operations.",
-    tags: ["fs", "async", "core"]
-  },
-  {
-    title: "fs.readFileSync(path[, options])",
-    path: "File System > fs.readFileSync",
-    excerpt: "Synchronous version of <span class='search-highlight'>fs.readFile</span>. Returns the contents of the file.",
-    tags: ["fs", "sync", "core"]
-  },
-  {
-    title: "Class: FileHandle",
-    path: "File System > Class: FileHandle",
-    excerpt: "A <FileHandle> object is an object wrapper for a numeric file descriptor. Instances of the <FileHandle> object are created by <span class='search-highlight'>fs.open()</span> methods.",
-    tags: ["fs", "class", "file descriptor"]
-  }
-];
+interface SearchResult {
+  title: string;
+  path: string;
+  excerpt: string;
+  tags: string[];
+  url: string;
+}
 
 const Index: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const navigate = useNavigate();
   
-  const handleSearch = (query: string) => {
+  const handleSearch = async (query: string) => {
     setSearchQuery(query);
-    setShowResults(true);
+    setIsSearching(true);
     
-    console.log("Searching for:", query);
+    try {
+      console.log("Searching for:", query);
+      const searchResults = await searchNodeJsDocs(query);
+      
+      if (searchResults.length === 0) {
+        setResults([]);
+        setShowResults(true);
+        toast({
+          title: "No results found",
+          description: "Try a different search term or check out the examples below.",
+          variant: "default",
+        });
+        return;
+      }
+      
+      const processedResults = await Promise.all(
+        searchResults.slice(0, 3).map(async (result: any) => {
+          try {
+            const content = await getNodeJsDocContent(result.apiUrl);
+            
+            const lines = content.split('\n');
+            let excerpt = '';
+            
+            for (let i = 0; i < lines.length; i++) {
+              const line = lines[i].toLowerCase();
+              if (line.includes(query.toLowerCase()) && i < lines.length - 3) {
+                excerpt = lines.slice(i, i + 3).join('\n');
+                break;
+              }
+            }
+            
+            if (!excerpt) {
+              excerpt = lines.filter(line => !line.startsWith('#') && line.trim().length > 0)
+                .slice(0, 3).join('\n');
+            }
+            
+            const highlightedExcerpt = excerpt.replace(
+              new RegExp(query, 'gi'), 
+              (match) => `<span class='search-highlight'>${match}</span>`
+            );
+            
+            const tags = ['node.js'];
+            if (content.toLowerCase().includes('async')) tags.push('async');
+            if (content.toLowerCase().includes('event')) tags.push('events');
+            if (result.path.includes('fs')) tags.push('fs');
+            if (result.path.includes('http')) tags.push('http');
+            if (result.path.includes('buffer')) tags.push('buffer');
+            if (content.toLowerCase().includes('class')) tags.push('class');
+            
+            return {
+              title: result.title,
+              path: `Node.js Documentation > ${result.path}`,
+              excerpt: highlightedExcerpt,
+              tags: tags.slice(0, 4),
+              url: `https://nodejs.org/docs/latest/api/${result.path}.html`
+            };
+          } catch (error) {
+            console.error("Error processing result:", error);
+            return {
+              title: result.title,
+              path: `Node.js Documentation > ${result.path}`,
+              excerpt: "Error retrieving content excerpt.",
+              tags: ['node.js'],
+              url: `https://nodejs.org/docs/latest/api/${result.path}.html`
+            };
+          }
+        })
+      );
+      
+      setResults(processedResults);
+      setShowResults(true);
+    } catch (error) {
+      console.error("Search error:", error);
+      toast({
+        title: "Search failed",
+        description: "There was an error processing your search. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   const handleExampleClick = (example: string) => {
     setSearchQuery(example);
     handleSearch(example);
+  };
+
+  const handleViewAllResults = () => {
+    window.open(`https://nodejs.org/docs/latest/api/all.html#all_${searchQuery.toLowerCase().replace(/\s+/g, '_')}`, '_blank');
   };
 
   return (
@@ -103,28 +179,55 @@ const Index: React.FC = () => {
           </div>
         </section>
         
-        {showResults && (
+        {isSearching && (
+          <section className="py-12 px-4 bg-muted/50">
+            <div className="max-w-6xl mx-auto">
+              <h2 className="text-2xl font-bold mb-6">Searching for "{searchQuery}"...</h2>
+              <div className="flex justify-center">
+                <div className="flex gap-1">
+                  <span className="animate-bounce">.</span>
+                  <span className="animate-bounce animation-delay-200">.</span>
+                  <span className="animate-bounce animation-delay-400">.</span>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+        
+        {showResults && !isSearching && (
           <section className="py-12 px-4 bg-muted/50">
             <div className="max-w-6xl mx-auto">
               <h2 className="text-2xl font-bold mb-6">Results for "{searchQuery}"</h2>
               
-              <div className="grid gap-4">
-                {sampleResults.map((result, index) => (
-                  <SampleSearchResult
-                    key={index}
-                    title={result.title}
-                    path={result.path}
-                    excerpt={result.excerpt}
-                    tags={result.tags}
-                  />
-                ))}
-              </div>
+              {results.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">No results found for your search.</p>
+                  <p>Try one of our examples or a different search term.</p>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {results.map((result, index) => (
+                    <SampleSearchResult
+                      key={index}
+                      title={result.title}
+                      path={result.path}
+                      excerpt={result.excerpt}
+                      tags={result.tags}
+                    />
+                  ))}
+                </div>
+              )}
               
-              <div className="mt-8 text-center">
-                <Button className="bg-nodejs-green hover:bg-nodejs-lightGreen">
-                  View All Results
-                </Button>
-              </div>
+              {results.length > 0 && (
+                <div className="mt-8 text-center">
+                  <Button 
+                    className="bg-nodejs-green hover:bg-nodejs-lightGreen"
+                    onClick={handleViewAllResults}
+                  >
+                    View All Results
+                  </Button>
+                </div>
+              )}
             </div>
           </section>
         )}

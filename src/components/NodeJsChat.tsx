@@ -4,6 +4,8 @@ import { Bot, Send, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { getAIChatResponse } from '@/utils/api';
+import { toast } from '@/components/ui/use-toast';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -41,26 +43,9 @@ const NodeJsChat: React.FC = () => {
     setInput('');
     setIsLoading(true);
     
-    // Simulate API call with a delay
-    setTimeout(() => {
-      // Example responses for specific Node.js questions
-      let responseContent = "I'm sorry, I don't have enough information to answer that question accurately. For more detailed information, please check the official Node.js documentation.";
-      
-      const question = input.toLowerCase();
-      
-      if (question.includes('fs.readfile')) {
-        responseContent = 'fs.readFile(path[, options], callback) is an asynchronous method to read the contents of a file. Example: fs.readFile(\'/path/to/file\', \'utf8\', (err, data) => { if (err) throw err; console.log(data); });';
-      } else if (question.includes('http server') || question.includes('create server')) {
-        responseContent = 'To create an HTTP server in Node.js: const http = require(\'http\'); const server = http.createServer((req, res) => { res.writeHead(200, {\'Content-Type\': \'text/plain\'}); res.end(\'Hello World\\n\'); }); server.listen(3000);';
-      } else if (question.includes('process.env')) {
-        responseContent = 'process.env is an object containing the user environment. It allows you to access environment variables, for example: const port = process.env.PORT || 3000;';
-      } else if (question.includes('buffer')) {
-        responseContent = 'The Buffer class in Node.js is used to handle binary data. Create a buffer: Buffer.from(\'string\'), Buffer.alloc(size), or Buffer.allocUnsafe(size).';
-      } else if (question.includes('event') || question.includes('eventemitter')) {
-        responseContent = 'EventEmitter is a class that helps with handling events. Usage: const EventEmitter = require(\'events\'); class MyEmitter extends EventEmitter {}; const myEmitter = new MyEmitter(); myEmitter.on(\'event\', () => { console.log(\'event occurred!\'); }); myEmitter.emit(\'event\');';
-      } else if (question.includes('async') || question.includes('await')) {
-        responseContent = 'async/await is a syntax to handle promises in a more readable way. Example: async function fetchData() { try { const data = await getData(); console.log(data); } catch (error) { console.error(error); } }';
-      }
+    try {
+      // Get response from our API utility
+      const responseContent = await getAIChatResponse(input);
       
       const assistantMessage: Message = {
         role: 'assistant',
@@ -68,8 +53,23 @@ const NodeJsChat: React.FC = () => {
       };
       
       setMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error("Error getting response:", error);
+      toast({
+        title: "Error",
+        description: "Failed to get a response. Please try again.",
+        variant: "destructive",
+      });
+      
+      const errorMessage: Message = {
+        role: 'assistant',
+        content: "I'm sorry, I'm having trouble accessing the Node.js documentation right now. Please try again later."
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
