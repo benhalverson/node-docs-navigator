@@ -80,11 +80,31 @@ const NodeJsChat: React.FC = () => {
   };
 
   const formatMessageContent = (content: string) => {
-    // Highlight code blocks for better readability
-    return content.replace(
-      /```(js|javascript)?([\s\S]*?)```/g, 
-      (_, lang, code) => `<pre><code>${code}</code></pre>`
-    );
+    // Properly format code blocks with syntax highlighting
+    return content
+      .replace(/```(js|javascript)?([\s\S]*?)```/g, (_, lang, code) => 
+        `<pre><code>${code.trim()}</code></pre>`
+      )
+      // Format inline code
+      .replace(/`([^`]+)`/g, (_, code) => 
+        `<code style="background-color: #f1f1f1; padding: 2px 4px; border-radius: 3px;">${code}</code>`
+      )
+      // Format links
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, text, url) => 
+        `<a href="${url}" class="text-nodejs-green hover:underline" target="_blank" rel="noopener noreferrer">${text}</a>`
+      );
+  };
+
+  const getSampleQuestions = (): string[] => [
+    "How do I create an HTTP server with Node.js?",
+    "Make a script using fetch API to get data from JSONPlaceholder",
+    "How to read and write files in Node.js?",
+    "Create a simple Express API server",
+    "How to use async/await with file operations?"
+  ];
+
+  const handleSampleQuestionClick = (question: string) => {
+    setInput(question);
   };
 
   return (
@@ -115,7 +135,7 @@ const NodeJsChat: React.FC = () => {
                   <Bot className="h-5 w-5 text-nodejs-green mt-1 flex-shrink-0" />
                 )}
                 <div 
-                  className="whitespace-pre-wrap"
+                  className="whitespace-pre-wrap break-words"
                   dangerouslySetInnerHTML={{ __html: formatMessageContent(message.content) }}
                 />
                 {message.role === 'user' && (
@@ -154,13 +174,25 @@ const NodeJsChat: React.FC = () => {
           <Button 
             onClick={handleSend} 
             disabled={isLoading || input.trim() === ''} 
-            className="bg-nodejs-green hover:bg-nodejs-lightGreen h-auto"
+            className="bg-nodejs-green hover:bg-nodejs-green/80 h-auto"
           >
             <Send className="h-5 w-5" />
           </Button>
         </div>
-        <div className="mt-2 text-xs text-muted-foreground">
-          <p>Try: "make a script using fetch API" or "how to create an HTTP server"</p>
+        
+        <div className="mt-3">
+          <p className="text-xs text-muted-foreground mb-2">Try asking:</p>
+          <div className="flex flex-wrap gap-2">
+            {getSampleQuestions().map((question, index) => (
+              <button
+                key={index}
+                onClick={() => handleSampleQuestionClick(question)}
+                className="text-xs bg-muted hover:bg-muted/80 text-muted-foreground px-2 py-1 rounded-full"
+              >
+                {question.length > 35 ? question.substring(0, 35) + '...' : question}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>

@@ -36,7 +36,8 @@ const Chat: React.FC = () => {
         </div>
       </footer>
       
-      <style jsx>{`
+      <style>
+        {`
         .search-highlight {
           background-color: rgba(104, 211, 145, 0.2);
           padding: 0 2px;
@@ -54,7 +55,8 @@ const Chat: React.FC = () => {
         code {
           font-family: monospace;
         }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };
